@@ -48,8 +48,10 @@ services:
 
   user-service:
     build: ./user-service
-    expose:
-      - "3002"
+    ports:
+      - "3002:3002"
+    # expose:
+    #   - "3002"
     environment:
       PORT: 3002
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/user_db
