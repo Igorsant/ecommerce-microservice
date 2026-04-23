@@ -39,6 +39,8 @@ services:
       - "3001"
     environment:
       PORT: 3001
+      NODE_ENV: development
+      USER_SERVICE_URL: http://user-service:3002
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
     depends_on:
       postgres:
