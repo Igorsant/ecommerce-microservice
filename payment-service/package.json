@@ -7,7 +7,15 @@
   },
   "dependencies": {
     "express": "^4.18.2",
+<<<<<<< payment-service-auth
+    "jsonwebtoken": "^9.0.3",
     "knex": "^2.5.1",
     "pg": "^8.11.3"
   }
 }
+=======
+    "knex": "^2.5.1",
+    "pg": "^8.11.3"
+  }
+}
+>>>>>>> main
