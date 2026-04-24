@@ -1,7 +1,10 @@
 const express = require('express');
 const knex = require('knex')(require('./knexfile'));
+<<<<<<< payment-service-auth
 const verifyAuthentication = require('./authMiddleware');
 
+=======
+>>>>>>> main
 const app = express();
 
 app.use(express.json());
@@ -20,6 +23,7 @@ app.get('/health', function(req, res) {
   });
 });
 
+<<<<<<< payment-service-auth
 app.get('/payments', verifyAuthentication, async function(req, res) {
   try {
     const pagamentos = await knex('payments').select('*');
@@ -31,6 +35,9 @@ app.get('/payments', verifyAuthentication, async function(req, res) {
 });
 
 app.post('/payments', verifyAuthentication, async function(req, res) {
+=======
+app.post('/payments', async function(req, res) {
+>>>>>>> main
   const orderId = req.body.order_id;
   const amount = req.body.amount;
   

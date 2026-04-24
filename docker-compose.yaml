@@ -39,6 +39,9 @@ services:
       - "3001"
     environment:
       PORT: 3001
+      NODE_ENV: development
+      USER_SERVICE_URL: http://user-service:3002
+      JWT_SECRET: dev-secret-change-me
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
     depends_on:
       postgres:
@@ -48,11 +51,13 @@ services:
 
   user-service:
     build: ./user-service
-    expose:
-      - "3002"
+    ports:
+      - "3002:3002"
+    # expose:
+    #   - "3002"
     environment:
       PORT: 3002
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/user_db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/user_db?sslmode=disable
     depends_on:
       postgres:
         condition: service_healthy
