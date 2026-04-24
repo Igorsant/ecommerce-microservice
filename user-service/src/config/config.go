@@ -11,6 +11,7 @@ import (
 var (
 	DBConnectionString = ""
 	Port               = 0
+	SecretKey          []byte
 )
 
 func Load() {
@@ -26,4 +27,6 @@ func Load() {
 	if err != nil {
 		Port = 3002
 	}
+
+	SecretKey = []byte(os.Getenv("JWT_SECRET"))
 }
