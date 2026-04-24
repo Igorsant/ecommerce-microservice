@@ -1,0 +1,17 @@
+# Build artifacts
+/_build/
+/deps/
+*.ez
+
+# Release files
+/priv/static/
+
+# Generated on crash
+erl_crash.dump
+
+# Environment files
+.env
+*.secret.exs
+
+# Elixir LS
+.elixir_ls/
