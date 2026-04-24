@@ -7,31 +7,37 @@ import (
 
 var userRoutes = []Route{
 	{
-		URI:                   "/",
+		URI:                   "/health",
+		Method:                http.MethodGet,
+		Function:              controllers.Health,
+		RequireAuthentication: false,
+	},
+	{
+		URI:                   "/users",
 		Method:                http.MethodPost,
 		Function:              controllers.CreateUser,
 		RequireAuthentication: false,
 	},
 	{
-		URI:                   "/",
+		URI:                   "/users",
 		Method:                http.MethodGet,
 		Function:              controllers.GetUsers,
 		RequireAuthentication: false,
 	},
 	{
-		URI:                   "/{userID}",
+		URI:                   "/users/{userID}",
 		Method:                http.MethodGet,
 		Function:              controllers.GetUserByID,
 		RequireAuthentication: false,
 	},
 	{
-		URI:                   "/{userID}",
+		URI:                   "/users/{userID}",
 		Method:                http.MethodPut,
 		Function:              controllers.UpdateUser,
 		RequireAuthentication: false,
 	},
 	{
-		URI:                   "/{userID}",
+		URI:                   "/users/{userID}",
 		Method:                http.MethodDelete,
 		Function:              controllers.DeleteUser,
 		RequireAuthentication: false,

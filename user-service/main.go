@@ -14,6 +14,7 @@ import (
 func main() {
 	config.Load()
 	database.Connect()
+	database.RunMigrations(config.DBConnectionString)
 	r := router.GenarateRouter()
 
 	c := cors.New(cors.Options{

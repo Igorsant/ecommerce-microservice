@@ -15,6 +15,17 @@ import (
 	"github.com/jackc/pgx"
 )
 
+func Health(w http.ResponseWriter, r *http.Request) {
+	err := database.DB.Ping(context.Background())
+	if err != nil {
+		http.Error(w, "DB DOWN", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	bodyRequest, err := io.ReadAll(r.Body)
 	if err != nil {
