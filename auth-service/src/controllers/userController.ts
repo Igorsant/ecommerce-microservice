@@ -5,6 +5,62 @@ import prisma from '../config/database';
 import logger from '../utils/logger';
 
 export class UserController {
+  async loginUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+      const correlationId = req.correlationId;
+
+      logger.info({ email, correlationId }, 'POST /login - Authenticating user');
+
+      if (!email || !password) {
+        res.status(400).json({
+          error: 'E-mail e senha são obrigatórios',
+          correlationId,
+        });
+        return;
+      }
+
+      const authResult = await userService.loginUser({
+        email,
+        password,
+        correlationId,
+      });
+
+      res.status(200).json({
+        token: authResult.token,
+        tokenType: authResult.tokenType,
+        expiresIn: authResult.expiresIn,
+        user: authResult.user,
+        correlationId,
+      });
+    } catch (error) {
+      const err = error as Error;
+      logger.error({ error: err.message, correlationId: req.correlationId }, 'Error in POST /login');
+
+      if (err.message === 'Credenciais inválidas') {
+        res.status(401).json({
+          error: 'Credenciais inválidas',
+          correlationId: req.correlationId,
+        });
+        return;
+      }
+
+      if (err.message === 'JWT_SECRET não configurado') {
+        res.status(500).json({
+          error: 'JWT não configurado no servidor',
+          correlationId: req.correlationId,
+        });
+        return;
+      }
+
+      res.status(500).json({
+        error: 'Erro interno do servidor',
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+        correlationId: req.correlationId,
+      });
+    }
+  }
+
   async createUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;

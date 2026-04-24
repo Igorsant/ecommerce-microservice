@@ -1,4 +1,5 @@
 import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import logger from '../utils/logger';
 
@@ -12,6 +13,19 @@ interface UserResponse {
   id: string;
   email: string;
   createdAt: Date;
+}
+
+interface LoginRequest {
+  email: string;
+  password: string;
+  correlationId?: string;
+}
+
+interface LoginResponse {
+  token: string;
+  tokenType: string;
+  expiresIn: string;
+  user: UserResponse;
 }
 
 export class UserService {
@@ -127,6 +141,67 @@ export class UserService {
     );
 
     return true;
+  }
+
+  async loginUser(data: LoginRequest): Promise<LoginResponse> {
+    const { email, password, correlationId } = data;
+
+    logger.info({ email, correlationId }, 'Authenticating user');
+
+    if (!email || !password) {
+      const error = new Error('E-mail e senha são obrigatórios');
+      logger.warn({ correlationId }, 'Login validation failed');
+      throw error;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      const error = new Error('Credenciais inválidas');
+      logger.warn({ email, correlationId }, 'User not found during login');
+      throw error;
+    }
+
+    const passwordMatches = await bcryptjs.compare(password, user.passwordHash);
+
+    if (!passwordMatches) {
+      const error = new Error('Credenciais inválidas');
+      logger.warn({ email, correlationId }, 'Invalid password during login');
+      throw error;
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!jwtSecret) {
+      const error = new Error('JWT_SECRET não configurado');
+      logger.error({ correlationId }, 'Missing JWT secret');
+      throw error;
+    }
+
+    const expiresIn = '1h';
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        email: user.email,
+      },
+      jwtSecret,
+      { expiresIn }
+    );
+
+    logger.info({ userId: user.id, correlationId }, 'User authenticated successfully');
+
+    return {
+      token,
+      tokenType: 'Bearer',
+      expiresIn,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    };
   }
 }
 
