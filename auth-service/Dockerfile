@@ -2,13 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 # Copiar arquivos de dependências
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY prisma ./prisma/
 
 # Instalar dependências
-RUN npm ci
+RUN npm ci --ignore-scripts && npx prisma generate
 
 # Copiar código-fonte
 COPY src ./src
