@@ -1,6 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { pool, runMigrations } = require('./database');
+const authMiddleware = require('./authMiddleware');
 
 const app = express();
 app.use(express.json());
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
     correlationId: req.correlationId,
     service: "product-service"
   }));
-
+  
   res.setHeader('x-correlation-id', correlationId);
   next();
 });
@@ -39,6 +40,8 @@ app.get('/health', async (req, res) => {
     });
   }
 });
+
+app.use(authMiddleware);
 
 app.get('/products', async (req, res) => {
   try {
