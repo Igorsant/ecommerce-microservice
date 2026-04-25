@@ -1,0 +1,13 @@
+SLI	Métrica real
+SLO	Meta dessa métrica
+SLA	Acordo com o clienteß
+
+Ex: 
+
+SLI:
+Tempo médio de resposta: 120ms
+Taxa de erro: 1%
+SLO:
+99% das requisições devem responder em até 200ms
+SLA:
+API deve ficar no ar 99% do tempo mensal
