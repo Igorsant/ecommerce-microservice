@@ -66,7 +66,7 @@ flowchart LR
 
   Auth -->|HTTP JSON + x-correlation-id| User
   Auth -->|JWT Bearer token| Order
-  Product -->|JWT Bearer token| Order
+  Order -->|JWT Bearer token| Product
 
   Auth -->|PostgreSQL protocol| DB[(PostgreSQL)]
   User -->|PostgreSQL protocol| DB
