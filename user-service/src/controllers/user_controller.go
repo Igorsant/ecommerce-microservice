@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"user-service/src/database"
 	"user-service/src/models"
 	"user-service/src/responses"
@@ -43,9 +42,10 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = db.QueryRow(
 		context.Background(),
-		`INSERT INTO users (name, phone) 
-		 VALUES ($1, $2) 
+		`INSERT INTO users (id, name, phone) 
+		 VALUES ($1, $2, $3)
 		 RETURNING id, created_at`,
+		user.ID,
 		user.Name,
 		user.Phone,
 	).Scan(&user.ID, &user.CreatedAt)
@@ -157,8 +157,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := strconv.ParseUint(id, 10, 64)
-	user.ID = userID
+	user.ID = id
 
 	responses.JSON(w, http.StatusOK, user)
 }
