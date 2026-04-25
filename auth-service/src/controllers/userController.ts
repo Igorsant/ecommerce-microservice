@@ -63,7 +63,7 @@ export class UserController {
 
   async createUser(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password, nome, telefone } = req.body;
       const correlationId = req.correlationId;
 
       logger.info(
@@ -96,7 +96,7 @@ export class UserController {
       // Notificar User Service
       try {
         await userServiceClient.notifyUserCreated(
-          { id: newUser.id, email: newUser.email },
+          { id: newUser.id, email: newUser.email, nome, telefone },
           correlationId
         );
       } catch (notificationError) {
