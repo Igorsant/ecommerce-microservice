@@ -72,6 +72,7 @@ services:
     environment:
       PORT: 3003
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/product_db
+      JWT_SECRET: chave_secreta
     depends_on:
       postgres:
         condition: service_healthy
