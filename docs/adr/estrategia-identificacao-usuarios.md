@@ -1,8 +1,8 @@
-# ADR 002: Estratégia de identificação de usuários
+# ADR 02: Estratégia de identificação de usuários
 
-- Status: Aceito
 - Data: 2026-04-24
-- Decisores: time do projeto
+- Status: Aceito
+- Revisor: time do projeto
 
 ## Contexto
 
