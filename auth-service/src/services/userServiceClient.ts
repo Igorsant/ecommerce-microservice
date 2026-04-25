@@ -4,6 +4,8 @@ import logger from '../utils/logger';
 interface UserNotificationPayload {
   id: string;
   email: string;
+  nome?: string;
+  telefone?: string;
 }
 
 export class UserServiceClient {
@@ -20,7 +22,13 @@ export class UserServiceClient {
   ): Promise<void> {
     try {
       logger.info(
-        { userId: userData.id, email: userData.email, correlationId },
+        {
+          userId: userData.id,
+          email: userData.email,
+          nome: userData.nome,
+          telefone: userData.telefone,
+          correlationId,
+        },
         'Notifying User Service about new user'
       );
 
