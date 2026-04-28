@@ -10,13 +10,19 @@ var userRoutes = []Route{
 		URI:                   "/health",
 		Method:                http.MethodGet,
 		Function:              controllers.Health,
-		RequireAuthentication: true,
+		RequireAuthentication: false,
+	},
+	{
+		URI:                   "/login",
+		Method:                http.MethodPost,
+		Function:              controllers.Login,
+		RequireAuthentication: false,
 	},
 	{
 		URI:                   "/users",
 		Method:                http.MethodPost,
 		Function:              controllers.CreateUser,
-		RequireAuthentication: true,
+		RequireAuthentication: false,
 	},
 	{
 		URI:                   "/users",
@@ -28,6 +34,12 @@ var userRoutes = []Route{
 		URI:                   "/users/{userID}",
 		Method:                http.MethodGet,
 		Function:              controllers.GetUserByID,
+		RequireAuthentication: true,
+	},
+	{
+		URI:                   "/auth-users/{userID}",
+		Method:                http.MethodGet,
+		Function:              controllers.GetAuthUserByID,
 		RequireAuthentication: true,
 	},
 	{

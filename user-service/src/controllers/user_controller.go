@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"user-service/src/authentication"
 	"user-service/src/database"
+	"user-service/src/dto"
 	"user-service/src/models"
 	"user-service/src/responses"
+	"user-service/src/security"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx"
 )
@@ -25,6 +29,56 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
+func Login(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.ERR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var req dto.LoginRequest
+	if err = json.Unmarshal(body, &req); err != nil {
+		responses.ERR(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db := database.DB
+
+	var userID string
+	var hash string
+
+	err = db.QueryRow(
+		context.Background(),
+		`SELECT id, password FROM auth_users WHERE email = $1`,
+		req.Email,
+	).Scan(&userID, &hash)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			responses.ERR(w, http.StatusUnauthorized, fmt.Errorf("email ou senha inválidos"))
+			return
+		}
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = security.CheckPassword(hash, req.Password)
+	if err != nil {
+		responses.ERR(w, http.StatusUnauthorized, fmt.Errorf("email ou senha inválidos"))
+		return
+	}
+
+	token, err := authentication.GenerateToken(userID)
+	if err != nil {
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, map[string]string{
+		"token": token,
+	})
+}
+
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	bodyRequest, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -32,30 +86,67 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	if err = json.Unmarshal(bodyRequest, &user); err != nil {
+	var req dto.CreateUserRequest
+	if err = json.Unmarshal(bodyRequest, &req); err != nil {
 		responses.ERR(w, http.StatusBadRequest, err)
 		return
 	}
 
+	userID := uuid.New().String()
+
 	db := database.DB
 
-	err = db.QueryRow(
-		context.Background(),
-		`INSERT INTO users (id, name, phone) 
-		 VALUES ($1, $2, $3)
-		 RETURNING id, created_at`,
-		user.ID,
-		user.Name,
-		user.Phone,
-	).Scan(&user.ID, &user.CreatedAt)
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+	defer tx.Rollback(context.Background())
 
+	_, err = tx.Exec(
+		context.Background(),
+		`INSERT INTO users (id, name, phone)
+		 VALUES ($1, $2, $3)`,
+		userID,
+		req.Name,
+		req.Phone,
+	)
 	if err != nil {
 		responses.ERR(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	responses.JSON(w, http.StatusCreated, user)
+	hash, err := security.Hash(req.Password)
+	if err != nil {
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	_, err = tx.Exec(
+		context.Background(),
+		`INSERT INTO auth_users (id, email, password)
+		 VALUES ($1, $2, $3)`,
+		userID,
+		req.Email,
+		string(hash),
+	)
+	if err != nil {
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = tx.Commit(context.Background()); err != nil {
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response := models.User{
+		ID:    userID,
+		Name:  req.Name,
+		Phone: req.Phone,
+	}
+
+	responses.JSON(w, http.StatusCreated, response)
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -122,6 +213,39 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.JSON(w, http.StatusOK, user)
+}
+
+func GetAuthUserByID(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["userID"]
+
+	db := database.DB
+
+	var authUser models.AuthUser
+
+	err := db.QueryRow(
+		context.Background(),
+		`SELECT id, email, password, created_at 
+		 FROM auth_users 
+		 WHERE id = $1`,
+		id,
+	).Scan(
+		&authUser.ID,
+		&authUser.Email,
+		&authUser.Password,
+		&authUser.CreatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			responses.ERR(w, http.StatusNotFound, err)
+			return
+		}
+		responses.ERR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, authUser)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
