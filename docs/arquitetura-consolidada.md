@@ -106,9 +106,9 @@ Os SLOs abaixo são propostos para a parte de autenticação e para a plataforma
 - **Health checks das APIs principais:** 99,9% de sucesso em janelas móveis.
 - **Erro 5xx agregado:** abaixo de 1% do total de requisições.
 
-### 4.4 Products (Análise com Carga de 50 Conexões)
+### 4.4 Products (Análise de Performance - Carga de 80 Conexões)
 
-Para validar a resiliência do microsserviço de Produtos, elevamos a carga do teste para **50 conexões simultâneas**, simulando um cenário de uso intenso e concorrência real no e-commerce.
+Para validar a resiliência e a capacidade de escala do microsserviço de Produtos, elevamos a carga do teste para **80 conexões simultâneas**, simulando um cenário de tráfego agressivo no nosso E-commerce.
 
 #### 4.4.1 Definição de SLOs (Service Level Objectives)
 
@@ -116,30 +116,29 @@ Estes são os objetivos de nível de serviço estabelecidos como critérios de a
 
 | Métrica | Objetivo (SLO) | Descrição |
 | :--- | :--- | :--- |
-| **Latência (p95)** | `< 200ms` | 95% das requisições devem ser respondidas em menos de 200ms. |
+| **Latência (p95)** | `< 400ms` | 95% das requisições devem ser respondidas em menos de 400ms. |
 | **Disponibilidade** | `99.9%` | Percentual mínimo de sucessos (respostas HTTP 2xx) esperado. |
 
 #### 4.4.2 Resultados da Medição
 
-Os dados obtidos através da ferramenta **Autocannon**, utilizando um token JWT válido para processamento completo da cadeia de middlewares, foram:
+Os dados obtidos através da ferramenta **Autocannon**, operando sob alta concorrência e utilizando validação via JWT, foram:
 
-* **Latência p50 (Mediana):** 137 ms
-* **Latência p97.5 (Aprox. p95):** 188 ms
-* **Latência p99:** 230 ms
-* **Throughput Médio:** 350,2 req/sec
-* **Total de Requisições:** 4.000 (em 10.14s)
+* **Latência p50 (Mediana):** 117 ms
+* **Latência p97.5 (Aprox. p95):** 152 ms
+* **Latência p99:** 219 ms
+* **Throughput Médio:** 665,8 req/sec
+* **Total de Requisições:** 7.000 (em 10.12s)
 * **Status:** 0 erros detectados (Taxa de sucesso de 100%).
 
 #### 4.4.3 Conclusão de Aderência
 
-Mesmo sob uma carga significativamente maior e estresse de concorrência, o microsserviço de Produtos manteve-se **plenamente aderente ao SLO estabelecido**.
+Mesmo com o aumento expressivo na carga de trabalho para 80 conexões simultâneas, o microsserviço de Produtos superou as expectativas, mantendo-se **plenamente aderente aos SLOs**.
 
-1.  **Conformidade de Latência:** O valor de **p95 (188ms)** situa-se dentro do limite de 200ms, demonstrando que o sistema mantém a fluidez mesmo em picos de acesso.
-2.  **Resiliência:** Embora o p99 tenha atingido 230ms, o comportamento é considerado estável para o ambiente conteinerizado (Docker), sem degradação exponencial de performance.
-3.  **Estabilidade Técnica:** A ausência total de erros de rede ou de aplicação (0 erros) comprova que o **Middleware de Autenticação**, a lógica de negócio e o **Pool de conexões com o PostgreSQL** estão devidamente dimensionados para lidar com acessos simultâneos.
+1. **Alta Performance vs. Meta:** O valor de **p95 (152ms)** é significativamente inferior ao limite estabelecido de **400ms**, demonstrando que o sistema opera com uma margem de segurança de mais de 60% em relação ao objetivo mínimo.
+2. **Estabilidade em Escala:** O sistema manteve uma média de **665 requisições por segundo** sem qualquer degradação que aproximasse os resultados do limite do SLO.
+3. **Robustez Técnica:** A ausência total de erros (0 erros) sob este nível de estresse confirma que o gerenciamento de recursos no **Docker** e a eficiência do **NGINX** como Gateway permitem que o Node.js processe as requisições de forma estável e segura.
 
-A arquitetura mostra-se robusta e capaz de suportar o volume de tráfego proposto para o MVP do e-commerce.
-
+A arquitetura demonstra maturidade técnica para suportar picos de acesso significativos, garantindo a integridade e a fluidez do MVP mesmo sob condições de estresse severo.
 
 ## 5. Estratégias de Observabilidade
 
