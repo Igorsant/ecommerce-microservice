@@ -10,7 +10,15 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-// ValidateToken verifica se o token pasado na requisição é válido
+func GenerateToken(userID string) (string, error) {
+	permissions := jwt.MapClaims{}
+	permissions["authorized"] = true
+	// permissions["exp"] = time.Now().Add(time.Hour * 6).Unix()
+	permissions["userID"] = userID
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, permissions)
+	return token.SignedString([]byte(config.SecretKey))
+}
+
 func ValidateToken(r *http.Request) (jwt.MapClaims, error) {
 	tokenString := extractToken(r)
 
