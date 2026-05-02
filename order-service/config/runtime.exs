@@ -6,6 +6,9 @@ jwt_secret =
 
 config :order_service, :jwt_secret, jwt_secret
 
+config :order_service, :product_service_url,
+  System.get_env("PRODUCT_SERVICE_URL") || "http://product-service:3003"
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

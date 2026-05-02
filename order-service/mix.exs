@@ -30,7 +30,8 @@ defmodule OrderService.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.4"},
       {:bandit, "~> 1.5"},
-      {:joken, "~> 2.6"}
+      {:joken, "~> 2.6"},
+      {:req, "~> 0.5"}
     ]
   end
 end

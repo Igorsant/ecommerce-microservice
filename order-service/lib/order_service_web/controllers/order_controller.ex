@@ -11,12 +11,17 @@ defmodule OrderServiceWeb.OrderController do
   end
 
   def create(conn, %{"order" => order_params}) do
-    with {:ok, %Order{} = order} <- Orders.create_order(order_params) do
+    %{"userID" => user_id} = conn.assigns.current_user
+    order_params = Map.put(order_params, "user_id", user_id)
+
+    with {:ok, %Order{} = order} <- Orders.create_order_with_items(order_params, conn.assigns.correlation_id, conn.assigns.token) do
       conn
       |> put_status(:created)
       |> render(:show, order: order)
     end
   end
+
+  def create(conn, _params), do: {:error, :bad_request}
 
   def show(conn, %{"id" => id}) do
     order = Orders.get_order_with_items!(id)
@@ -27,6 +32,12 @@ defmodule OrderServiceWeb.OrderController do
     order = Orders.get_order!(id)
 
     with {:ok, %Order{} = order} <- Orders.update_order(order, order_params) do
+      render(conn, :show, order: order)
+    end
+  end
+
+  def mark_as_paid(conn, %{"order_id" => id}) do
+    with {:ok, %Order{} = order} <- Orders.mark_order_paid(id, conn.assigns.correlation_id, conn.assigns.token) do
       render(conn, :show, order: order)
     end
   end

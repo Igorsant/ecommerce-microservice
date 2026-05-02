@@ -94,6 +94,23 @@ app.post('/products', async (req, res) => {
   }
 });
 
+app.get('/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT p.*, s.quantity FROM products p LEFT JOIN stock s ON p.id = s.product_id WHERE p.id = $1',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Produto não encontrado", correlationId: req.correlationId });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(JSON.stringify({ level: "ERROR", correlationId: req.correlationId, error: err.message }));
+    res.status(500).json({ error: "Erro ao buscar produto", correlationId: req.correlationId });
+  }
+});
+
 app.patch('/products/:id/stock', async (req, res) => {
   const { id } = req.params;
   const { quantityChange } = req.body; 

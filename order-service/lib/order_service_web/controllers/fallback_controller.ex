@@ -14,4 +14,18 @@ defmodule OrderServiceWeb.FallbackController do
     |> put_view(json: OrderServiceWeb.ErrorJSON)
     |> render(:"404")
   end
+
+  def call(conn, {:error, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> put_view(json: OrderServiceWeb.ErrorJSON)
+    |> render(:"400")
+  end
+
+  def call(conn, {:error, :service_unavailable}) do
+    conn
+    |> put_status(:service_unavailable)
+    |> put_view(json: OrderServiceWeb.ErrorJSON)
+    |> render(:"503")
+  end
 end

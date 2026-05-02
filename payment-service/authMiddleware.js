@@ -15,8 +15,9 @@ function verifyAuthentication(req, res, next) {
     const decodedToken = jwt.verify(token, jwtSecret);
     
     req.userId = decodedToken.id;
-    
-    next(); 
+    req.token = token;
+
+    next();
     
   } catch (error) {
     console.log('{"level": "WARN", "correlationId": "' + req.correlationId + '", "message": "Invalid or expired token"}');
