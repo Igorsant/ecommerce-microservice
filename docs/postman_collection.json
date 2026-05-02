@@ -40,14 +40,7 @@
       "name": "login",
       "request": {
         "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJ1c2VySUQiOiJmNDMyMTA4OS0wYjI0LTRlNjYtYjIzOS00N2JmZTBjM2Q2NWIifQ.vrKa9QEQlJD98vD5VpqIyY93EddqpPl1UJLXPGh4S6o",
-              "type": "string"
-            }
-          ]
+          "type": "noauth"
         },
         "method": "POST",
         "header": [],
@@ -277,7 +270,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "",
+          "raw": "{\n    \"order_id\": \"6acb8af0-d247-44a4-99f4-0d29723b41d8\",\n    \"amount\": 12\n}",
           "options": {
             "raw": {
               "language": "json"
