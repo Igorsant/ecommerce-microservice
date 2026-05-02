@@ -8,7 +8,9 @@ defmodule OrderServiceWeb.Plugs.Auth do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
          {:ok, claims} <- verify_token(token),
          :ok <- check_expiry(claims) do
-      assign(conn, :current_user, claims)
+      conn
+      |> assign(:current_user, claims)
+      |> assign(:token, token)
     else
       _ ->
         conn

@@ -11,3 +11,5 @@ docker compose up -d
 ```bash
 docker compose down
 ```
+
+## All routes can be found in docs/postman_collection.json

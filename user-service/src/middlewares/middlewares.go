@@ -6,7 +6,23 @@ import (
 	"net/http"
 	"user-service/src/authentication"
 	"user-service/src/responses"
+
+	"github.com/google/uuid"
 )
+
+// CorrelationID reads x-correlation-id from the request header, generates one if absent,
+// stores it in context, and echoes it in the response header.
+func CorrelationID(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		correlationID := r.Header.Get("x-correlation-id")
+		if correlationID == "" {
+			correlationID = uuid.New().String()
+		}
+		w.Header().Set("x-correlation-id", correlationID)
+		ctx := context.WithValue(r.Context(), "correlationID", correlationID)
+		next(w, r.WithContext(ctx))
+	}
+}
 
 // Logger escreve informações da requisição no terminal
 func Logger(nextFunction http.HandlerFunc) http.HandlerFunc {

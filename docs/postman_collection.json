@@ -1,0 +1,294 @@
+{
+  "info": {
+    "_postman_id": "5ed2120e-2d55-407d-b5af-5c473984cb4a",
+    "name": "ecommerce",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "13441094"
+  },
+  "item": [
+    {
+      "name": "sign up",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"email\": \"email@email.com\",\n    \"phone\": \"1234\",\n    \"password\": \"123456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost/users/users",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "users",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "login",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"email@email.com\",\n    \"password\": \"123456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost/users/login",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "users",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "list users",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost/users/users",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "users",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "list products",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost/products/products",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "products",
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get product",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost/products/products/4111c070-ba52-4bc2-a846-1dd502a2ef57",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "products",
+            "products",
+            "4111c070-ba52-4bc2-a846-1dd502a2ef57"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create product",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"price\": \"12\",\n    \"category\": \"category\",\n    \"quantity\": \"3\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost/products/products",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "products",
+            "products"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "list orders",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost/orders/orders",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "orders",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create order",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"order\": {\n        \"items\": [\n            {\n                \"product_id\": \"4111c070-ba52-4bc2-a846-1dd502a2ef57\",\n                \"quantity\": 1\n            }\n        ]\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost/orders/orders",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "orders",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "make payment",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"order_id\": \"6acb8af0-d247-44a4-99f4-0d29723b41d8\",\n    \"amount\": 12\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost/payments/payments",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "payments",
+            "payments"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

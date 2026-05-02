@@ -33,22 +33,41 @@ app.get('/payments', verifyAuthentication, async function(req, res) {
 app.post('/payments', verifyAuthentication, async function(req, res) {
   const orderId = req.body.order_id;
   const amount = req.body.amount;
-  
+
   console.log('{"level": "INFO", "correlationId": "' + req.correlationId + '", "message": "Processando pagamento para a ordem ' + orderId + '", "amount": ' + amount + '}');
-  
+
   try {
     const [pagamentoSalvo] = await knex('payments').insert({
       order_id: orderId,
-      amount: amount
+      amount: amount,
+      status: 'approved'
     }).returning(['id', 'order_id', 'status', 'amount', 'created_at']);
-    
+
+    await notifyOrderPaid(orderId, req.token, req.correlationId);
+
     res.status(201).json(pagamentoSalvo);
-    
+
   } catch (erro) {
-    console.error('{"level": "ERROR", "correlationId": "' + req.correlationId + '", "message": "Falha ao salvar no banco de dados"}');
+    console.error('{"level": "ERROR", "correlationId": "' + req.correlationId + '", "message": "Falha ao processar pagamento: ' + erro.message + '"}');
     res.status(500).json({ error: 'Erro interno ao processar pagamento' });
   }
 });
+
+async function notifyOrderPaid(orderId, token, correlationId) {
+  const orderServiceUrl = process.env.ORDER_SERVICE_URL || 'http://order-service:3004';
+  const response = await fetch(`${orderServiceUrl}/orders/${orderId}/paid`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'x-correlation-id': correlationId
+    }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Order service returned ${response.status}: ${body}`);
+  }
+}
 
 const port = process.env.PORT || 3005;
 

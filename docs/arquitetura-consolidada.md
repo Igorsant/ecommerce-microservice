@@ -6,29 +6,19 @@
 
 ## 1. Contexto e Problema
 
-O projeto foi estruturado como um conjunto de microsserviços para suportar autenticação, cadastro de usuários, catálogo de produtos, pedidos e pagamentos. A solução atual usa uma instância PostgreSQL com segregação lógica por banco de dados, um gateway reverso via Nginx e comunicação HTTP entre os serviços.
+O projeto foi estruturado como um conjunto de microsserviços para suportar cadastro de usuários, catálogo de produtos, pedidos e pagamentos. A solução atual usa uma instância PostgreSQL com segregação lógica por banco de dados, um gateway reverso via Nginx e comunicação HTTP entre os serviços.
 
 O principal problema de arquitetura é equilibrar três objetivos ao mesmo tempo:
 
 1. manter isolamento de domínio entre os serviços;
-2. permitir integração simples entre autenticação e criação de perfis de usuário;
-3. definir uma base mínima de confiabilidade, observabilidade e segurança para o sistema.
-
-Hoje o Auth Service emite JWT após login, usa `correlationId` para rastreabilidade e notifica o User Service por HTTP quando um usuário é criado. Os demais serviços validam requisições por meio de headers HTTP e, quando necessário, por JWT compartilhado com a mesma chave configurada no ambiente.
+2. definir uma base mínima de confiabilidade, observabilidade e segurança para o sistema.
 
 ## 2. Mapa de Bounded Contexts
 
-### Auth Context
-
-- Responsável por cadastro, login, emissão de JWT e orquestração inicial da criação de usuário.
-- É a origem da identidade autenticada do sistema.
-- Persiste dados de autenticação e usuário base.
-
 ### User Context
 
-- Responsável pelo perfil funcional do usuário no domínio de usuários.
-- Recebe notificações de criação e remoção vindas do Auth Service.
-- Mantém os dados de perfil que não pertencem ao domínio de autenticação.
+- Responsável pelo cadastro e perfil funcional do usuário.
+- Mantém os dados de identificação do usuário no sistema.
 
 ### Product Context
 
@@ -58,18 +48,17 @@ Hoje o Auth Service emite JWT após login, usa `correlationId` para rastreabilid
 flowchart LR
   Client[Cliente / Frontend] -->|HTTP/HTTPS| Nginx[Nginx Reverse Proxy]
 
-  Nginx -->|HTTP REST| Auth[auth-service :3001]
   Nginx -->|HTTP REST| User[user-service :3002]
   Nginx -->|HTTP REST| Product[product-service :3003]
   Nginx -->|HTTP REST| Order[order-service :3004]
   Nginx -->|HTTP REST| Payment[payment-service :3005]
 
-  Auth -->|HTTP JSON + x-correlation-id| User
-  Auth -->|JWT Bearer token| Order
-  Order -->|JWT Bearer token| Product
+  Order -->|HTTP GET /products/:id| Product
+  Order -->|HTTP PATCH /products/:id/stock| Product
+  Payment -->|HTTP GET /orders/:id| Order
+  Payment -->|HTTP PATCH /orders/:id/status| Order
 
-  Auth -->|PostgreSQL protocol| DB[(PostgreSQL)]
-  User -->|PostgreSQL protocol| DB
+  User -->|PostgreSQL protocol| DB[(PostgreSQL)]
   Product -->|PostgreSQL protocol| DB
   Order -->|PostgreSQL protocol| DB
   Payment -->|PostgreSQL protocol| DB
@@ -78,8 +67,7 @@ flowchart LR
 ### Protocolos observados
 
 - **HTTP/REST** entre cliente, Nginx e serviços.
-- **HTTP JSON** entre Auth Service e User Service para notificação de criação e deleção.
-- **JWT via header `Authorization: Bearer <token>`** para autenticação entre serviços que exigem identidade.
+- **HTTP JSON** entre serviços para consultas e notificações de estado (detalhado em ADR 003).
 - **PostgreSQL** para persistência dos dados de cada contexto.
 - **`x-correlation-id`** para rastreabilidade distribuída.
 
@@ -87,30 +75,17 @@ flowchart LR
 
 Os SLOs abaixo são propostos para a parte de autenticação e para a plataforma como um todo. Eles devem ser medidos com base em janelas móveis de 30 dias.
 
-### 4.1 Auth Service
-
-- **Disponibilidade do `/health`:** 99,95%.
-- **Sucesso do login:** 99,5% das requisições de autenticação devem retornar sucesso quando as credenciais estiverem corretas e os dependentes saudáveis.
-- **Latência de login:** p95 abaixo de 400 ms.
-- **Emissão de JWT:** 99,9% das respostas de login bem-sucedido devem conter token válido e expirável.
-
-### 4.2 Comunicação Auth Service -> User Service
-
-- **Entrega da notificação de criação de usuário:** 99,0%.
-- **Latência da notificação HTTP:** p95 abaixo de 500 ms.
-- **Rollback quando a notificação falhar:** 100% dos casos devem reverter o usuário criado no Auth Service quando o perfil não puder ser criado no User Service.
-
-### 4.3 Plataforma
+### 4.1 Plataforma
 
 - **Disponibilidade do gateway Nginx:** 99,9%.
 - **Health checks das APIs principais:** 99,9% de sucesso em janelas móveis.
 - **Erro 5xx agregado:** abaixo de 1% do total de requisições.
 
-### 4.4 Products (Análise de Performance - Carga de 80 Conexões)
+### 4.2 Products (Análise de Performance - Carga de 80 Conexões)
 
 Para validar a resiliência e a capacidade de escala do microsserviço de Produtos, elevamos a carga do teste para **80 conexões simultâneas**, simulando um cenário de tráfego agressivo no nosso E-commerce.
 
-#### 4.4.1 Definição de SLOs (Service Level Objectives)
+#### 4.2.1 Definição de SLOs (Service Level Objectives)
 
 Estes são os objetivos de nível de serviço estabelecidos como critérios de aceitação para o projeto:
 
@@ -119,7 +94,7 @@ Estes são os objetivos de nível de serviço estabelecidos como critérios de a
 | **Latência (p95)** | `< 400ms` | 95% das requisições devem ser respondidas em menos de 400ms. |
 | **Disponibilidade** | `99.9%` | Percentual mínimo de sucessos (respostas HTTP 2xx) esperado. |
 
-#### 4.4.2 Resultados da Medição
+#### 4.2.2 Resultados da Medição
 
 Os dados obtidos através da ferramenta **Autocannon**, operando sob alta concorrência e utilizando validação via JWT, foram:
 
@@ -130,7 +105,7 @@ Os dados obtidos através da ferramenta **Autocannon**, operando sob alta concor
 * **Total de Requisições:** 7.000 (em 10.12s)
 * **Status:** 0 erros detectados (Taxa de sucesso de 100%).
 
-#### 4.4.3 Conclusão de Aderência
+#### 4.2.3 Conclusão de Aderência
 
 Mesmo com o aumento expressivo na carga de trabalho para 80 conexões simultâneas, o microsserviço de Produtos superou as expectativas, mantendo-se **plenamente aderente aos SLOs**.
 
@@ -144,7 +119,7 @@ A arquitetura demonstra maturidade técnica para suportar picos de acesso signif
 
 ### Logging
 
-- Usar logs estruturados em JSON no Auth Service, Product Service e Payment Service.
+- Usar logs estruturados em JSON no User Service, Product Service e Payment Service.
 - Incluir `correlationId`, nome do serviço, nível do log e dados mínimos da operação.
 - Evitar logar senha, token JWT completo e dados sensíveis de cartão ou pagamento.
 
@@ -156,16 +131,14 @@ A arquitetura demonstra maturidade técnica para suportar picos de acesso signif
 
 ### Health checks
 
-- Expor endpoint `/health` em Auth Service e Product Service.
-- Validar conectividade com banco de dados no Auth Service.
-- Considerar saúde como degradada quando houver falha de banco ou indisponibilidade do serviço dependente.
+- Expor endpoint `/health` em todos os serviços.
+- Validar conectividade com banco de dados em cada health check.
+- Considerar saúde como degradada quando houver falha de banco ou indisponibilidade de serviço dependente.
 
 ### Métricas recomendadas
 
 - taxa de sucesso e erro por endpoint;
 - latência p50, p95 e p99;
-- quantidade de autenticações por minuto;
-- quantidade de falhas de notificação para o User Service;
 - tempo de resposta do health check.
 
 ### Tracing
@@ -177,9 +150,8 @@ A arquitetura demonstra maturidade técnica para suportar picos de acesso signif
 
 ### Autenticação
 
-- JWT é o mecanismo central de autenticação entre serviços.
-- O claim `sub` identifica o usuário autenticado.
-- O segredo JWT deve ser compartilhado de forma segura por ambiente, nunca hardcoded em produção.
+- A estratégia de autenticação do sistema é responsabilidade do User Service.
+- Caso JWT seja adotado, o claim `sub` deve identificar o usuário autenticado e o segredo deve ser gerenciado por variável de ambiente, nunca hardcoded.
 
 ### Autorização
 
@@ -188,7 +160,7 @@ A arquitetura demonstra maturidade técnica para suportar picos de acesso signif
 
 ### Proteção de dados
 
-- Senhas devem continuar sendo armazenadas com hash bcrypt.
+- Senhas devem ser armazenadas com hash bcrypt.
 - Variáveis sensíveis devem permanecer em `.env` ou em secret manager equivalente.
 - Respostas de erro não devem expor detalhes internos em produção.
 
